@@ -1,0 +1,16 @@
+2026-04-02 16:01:56.000 | INFO     | __main__:<module>:87 - {'seed': 42, 'output_dir': '/root/autodl-tmp/UniCRS-main/pre_trained_prompt', 'debug': False, 'dataset': 'redial', 'num_workers': 0, 'max_length': 200, 'prompt_max_length': 200, 'entity_max_length': 32, 'tokenizer': 'microsoft/DialoGPT-small', 'text_tokenizer': 'roberta-base', 'model': 'microsoft/DialoGPT-small', 'text_encoder': 'roberta-base', 'num_bases': 8, 'num_train_epochs': 5, 'max_train_steps': None, 'per_device_train_batch_size': 64, 'per_device_eval_batch_size': 128, 'gradient_accumulation_steps': 1, 'learning_rate': 0.0005, 'weight_decay': 0.01, 'max_grad_norm': None, 'num_warmup_steps': 1389, 'fp16': False, 'use_wandb': False, 'entity': None, 'project': None, 'name': None, 'log_all': False}
+2026-04-02 16:01:56.000 | INFO     | __main__:<module>:88 - Distributed environment: NO
+Num processes: 1
+Process index: 0
+Local process index: 0
+Device: cuda
+
+Mixed precision type: no
+
+2026-04-02 16:03:37.510 | INFO     | __main__:<module>:216 - ***** Running training *****
+2026-04-02 16:03:37.511 | INFO     | __main__:<module>:217 -   Num examples = 88888
+2026-04-02 16:03:37.511 | INFO     | __main__:<module>:218 -   Num Epochs = 5
+2026-04-02 16:03:37.511 | INFO     | __main__:<module>:219 -   Instantaneous batch size per device = 64
+2026-04-02 16:03:37.511 | INFO     | __main__:<module>:220 -   Total train batch size (w. parallel, distributed & accumulation) = 64
+2026-04-02 16:03:37.511 | INFO     | __main__:<module>:221 -   Gradient Accumulation steps = 1
+2026-04-02 16:03:37.511 | INFO     | __main__:<module>:222 -   Total optimization steps = 6945
