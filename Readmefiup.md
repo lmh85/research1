@@ -96,12 +96,12 @@ nohup accelerate launch train_conv.py \
   --prompt_max_length 200 \
   --entity_max_length 32 \
   --learning_rate 1e-4 \
-  --output_dir /root/autodl-tmp/UniCRS-main/output_conv \
+  --output_dir /root/autodl-tmp/UniCRS-main/output_conv_fiup \
   --use_fiup \
   --fiup_alpha 0.8 \
   --sentiment_backend textblob \
-  --fiup_states_dir /root/autodl-tmp/UniCRS-main/output_conv/fiup_states \
-  > train_conv_pro.log 2>&1 &
+  --fiup_states_dir /root/autodl-tmp/UniCRS-main/output_conv_fiup/fiup_states \
+  > train_conv_pro421.log 2>&1 &
 ---
 
 ### 第四步：对话推理（不涉及 FIUP，命令不变）
