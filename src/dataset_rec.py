@@ -33,7 +33,10 @@ def build_prompt_with_fiup(
 class CRSRecDataset(Dataset):
     """
     UniCRS 推荐任务数据集。
-    【已按原版逻辑重构，保证与原始代码完全一致】
+    支持 KG 邻居扩展（RAG）：通过 KGExpander 将 entity 字段扩展为 2 跳邻居，
+    让 KGPrompt 的 cross-attention 覆盖更丰富的图结构，提升 Recall@K。
+
+    使用方式：传入 kg_expander 实例即可，不传则与原版完全一致。
     """
 
     def __init__(
@@ -47,13 +50,15 @@ class CRSRecDataset(Dataset):
         entity_max_length,
         debug=False,
         use_resp=False,
+        kg_expander=None,       # [RAG] KGExpander 实例，None = 不扩展
     ):
         super().__init__()
         self.debug = debug
         self.tokenizer = tokenizer
         self.prompt_tokenizer = prompt_tokenizer
         self.use_resp = use_resp
-        self.split = split  # <-- 保存 split
+        self.split = split
+        self.kg_expander = kg_expander      # [RAG]
 
         self.context_max_length = context_max_length
         self.prompt_max_length = prompt_max_length - 1
@@ -74,7 +79,7 @@ class CRSRecDataset(Dataset):
                 if len(dialog['rec']) == 0:
                     continue
 
-                # ========= 完全按照原版代码拼接 context =========
+                # ── 原版 context 拼接逻辑（不变）──────────────────────────────
                 context = ''
                 prompt_context = ''
 
@@ -101,7 +106,7 @@ class CRSRecDataset(Dataset):
                     context += resp + self.tokenizer.eos_token
                     prompt_context += resp + self.prompt_tokenizer.sep_token
 
-                # Tokenize（原版核心逻辑）
+                # ── 原版 tokenize 逻辑（不变）─────────────────────────────────
                 context_ids = self.tokenizer.convert_tokens_to_ids(
                     self.tokenizer.tokenize(context)
                 )
@@ -113,26 +118,30 @@ class CRSRecDataset(Dataset):
                 prompt_ids = prompt_ids[-self.prompt_max_length:]
                 prompt_ids.insert(0, self.prompt_tokenizer.cls_token_id)
 
-                # FIUP 字段保留
+                # ── [RAG] KG 邻居扩展 ─────────────────────────────────────────
                 entity_ids = dialog.get('entity', [])
+                if self.kg_expander is not None:
+                    entity_ids = self.kg_expander.expand(entity_ids)
+                # ─────────────────────────────────────────────────────────────
+
+                # ── FIUP 字段 ─────────────────────────────────────────────────
                 entity_names = dialog.get('entity_names', [])
                 user_id = str(dialog.get('user_id', dialog.get('conv_id', 'unknown')))
-                context_str = prompt_context  # 与原版格式对齐
+                context_str = prompt_context
 
-                # 逐条加入数据
                 for item in dialog['rec']:
                     self.data.append({
-                        'context': context_ids,
-                        'prompt': prompt_ids,
-                        'entity': entity_ids[-self.entity_max_length:],
-                        'rec': item,
-                        # FIUP 保留字段
-                        'context_str': context_str,
-                        'user_id': user_id,
+                        'context':      context_ids,
+                        'prompt':       prompt_ids,
+                        'entity':       entity_ids[-self.entity_max_length:],
+                        'rec':          item,
+                        # FIUP 字段
+                        'context_str':  context_str,
+                        'user_id':      user_id,
                         'entity_names': entity_names,
                     })
 
-        logger.info(f'[{self.split}] dataset size: {len(self.data)}')  # <-- 修复这里
+        logger.info(f'[{self.split}] dataset size: {len(self.data)}')
 
     def __len__(self):
         return len(self.data)
@@ -143,8 +152,7 @@ class CRSRecDataset(Dataset):
 
 class CRSRecDataCollator:
     """
-    【与原版 CRSRecDataCollator 逻辑完全一致】
-    支持 FIUP 字段透传
+    与原版逻辑完全一致，支持 FIUP 字段透传。
     """
 
     def __init__(
@@ -174,27 +182,22 @@ class CRSRecDataCollator:
         entity_batch = []
         label_batch = []
 
-        # FIUP 字段
         user_id_list = []
         context_str_list = []
         entity_names_list = []
 
         for sample in batch:
-            # 原版标准格式
             context_batch['input_ids'].append(sample['context'])
             prompt_batch['input_ids'].append(sample['prompt'])
             entity_batch.append(sample['entity'])
             label_batch.append(sample['rec'])
 
-            # FIUP
             user_id_list.append(sample.get('user_id', 'unknown'))
             context_str_list.append(sample.get('context_str', ''))
             entity_names_list.append(sample.get('entity_names', []))
 
-        # ========= 原版 padding 逻辑 =========
         input_batch = {}
 
-        # Context
         context_batch = self.tokenizer.pad(
             context_batch, padding=self.padding, max_length=self.context_max_length
         )
@@ -204,7 +207,6 @@ class CRSRecDataCollator:
                 context_batch[k] = torch.as_tensor(v, device=self.device)
         input_batch['context'] = context_batch
 
-        # Prompt
         prompt_batch = self.prompt_tokenizer.pad(
             prompt_batch, padding=self.padding, max_length=self.prompt_max_length
         )
@@ -213,15 +215,13 @@ class CRSRecDataCollator:
                 prompt_batch[k] = torch.as_tensor(v, device=self.device)
         input_batch['prompt'] = prompt_batch
 
-        # Entity
         entity_batch = padded_tensor(
             entity_batch, pad_idx=self.pad_entity_id, pad_tail=True, device=self.device
         )
         input_batch['entity'] = entity_batch
 
-        # ========= FIUP 透传字段 =========
-        input_batch['user_id'] = user_id_list
-        input_batch['context_str'] = context_str_list
+        input_batch['user_id']      = user_id_list
+        input_batch['context_str']  = context_str_list
         input_batch['entity_names'] = entity_names_list
 
         return input_batch
