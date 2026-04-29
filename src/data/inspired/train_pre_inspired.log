@@ -1,0 +1,18 @@
+nohup: ignoring input
+The following values were not passed to `accelerate launch` and had defaults used instead:
+	`--num_processes` was set to a value of `1`
+	`--num_machines` was set to a value of `1`
+	`--mixed_precision` was set to a value of `'no'`
+	`--dynamo_backend` was set to a value of `'no'`
+To avoid this warning pass in values for each of the problematic parameters or run `accelerate config`.
+/root/miniconda3/envs/fiup/bin/python3.10: can't open file '/root/autodl-tmp/UniCRS-main/src/data/inspired/train_pre.py': [Errno 2] No such file or directory
+Traceback (most recent call last):
+  File "/root/miniconda3/envs/fiup/bin/accelerate", line 6, in <module>
+    sys.exit(main())
+  File "/root/miniconda3/envs/fiup/lib/python3.10/site-packages/accelerate/commands/accelerate_cli.py", line 50, in main
+    args.func(args)
+  File "/root/miniconda3/envs/fiup/lib/python3.10/site-packages/accelerate/commands/launch.py", line 1405, in launch_command
+    simple_launcher(args)
+  File "/root/miniconda3/envs/fiup/lib/python3.10/site-packages/accelerate/commands/launch.py", line 993, in simple_launcher
+    raise subprocess.CalledProcessError(returncode=process.returncode, cmd=cmd)
+subprocess.CalledProcessError: Command '['/root/miniconda3/envs/fiup/bin/python3.10', 'train_pre.py', '--dataset', 'inspired', '--tokenizer', 'microsoft/DialoGPT-small', '--model', 'microsoft/DialoGPT-small', '--text_tokenizer', 'roberta-base', '--text_encoder', 'roberta-base', '--num_train_epochs', '5', '--gradient_accumulation_steps', '1', '--per_device_train_batch_size', '64', '--per_device_eval_batch_size', '128', '--num_warmup_steps', '1389', '--max_length', '200', '--prompt_max_length', '200', '--entity_max_length', '32', '--learning_rate', '5e-4', '--output_dir', '/root/autodol-tmp/UniCRS-main/pre_trained_prompt_inspired']' returned non-zero exit status 2.

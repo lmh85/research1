@@ -1,0 +1,13 @@
+[INFO] 数据集: inspired_gen
+[INFO] 训练文件: /root/autodl-tmp/UniCRS-main/src/data/inspired_gen/train_data_processed.jsonl
+[INFO] 输出文件: /root/autodl-tmp/UniCRS-main/src/data/inspired_gen/train_data_augmented.jsonl
+[INFO] 候选电影总数: 1472
+[INFO] 加载模型: /root/autodl-tmp/models/Qwen/Qwen2___5-7B-Instruct
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██▌       | 1/4 [00:01<00:03,  1.08s/it]Loading checkpoint shards:  50%|█████     | 2/4 [00:02<00:02,  1.19s/it]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:03<00:01,  1.19s/it]Loading checkpoint shards: 100%|██████████| 4/4 [00:04<00:00,  1.17s/it]Loading checkpoint shards: 100%|██████████| 4/4 [00:04<00:00,  1.17s/it]
+[INFO] 模型加载完成
+[INFO] 开始处理训练数据...
+0it [00:00, ?it/s]Starting from v4.46, the `logits` model output will have the same type as the model (except at train time, where it will always be FP32)
+3it [00:01,  1.95it/s]4it [00:02,  1.36it/s]8it [00:03,  2.55it/s]9it [00:04,  2.11it/s]11it [00:05,  2.21it/s]16it [00:06,  3.34it/s]17it [00:07,  2.56it/s]20it [00:07,  2.83it/s]
+
+[DONE] 总计: 20 条，增强: 7 条，错误: 0 条
+[DONE] 输出文件: /root/autodl-tmp/UniCRS-main/src/data/inspired_gen/train_data_augmented.jsonl

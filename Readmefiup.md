@@ -1,4 +1,18 @@
+# 创建独立环境专门用于数据增强
+conda create -n augment python=3.10 -y
+conda activate augment
 
+pip install transformers==4.45.0 torch accelerate tqdm -q
+
+python3 augment_data.py \
+  --dataset redial_gen \
+  --model_path /root/autodl-tmp/models/Qwen/Qwen2___5-7B-Instruct \
+  --max_samples 100 \
+  --score_threshold 0.6 \
+  --top_k_candidates 5 \
+  > augment_test.log 2>&1 &
+
+tail -f augment_test.log
 ## 完整运行命令（修改后版本）
 
 ### 第一步：数据处理（不变，与原版相同）
@@ -23,7 +37,7 @@ python inspired/remove_entity.py
 ```bash
 cd src
 python data/redial/process.py
-
+python data/inspired/process.py
 export OMP_NUM_THREADS=1
 accelerate launch train_pre.py \
 --dataset redial \
@@ -161,9 +175,63 @@ nohup accelerate launch train_rec.py \
 --sentiment_backend textblob \
 > train_rec.log 2>&1 &
 ```
-
+### 第一阶段：用增强数据预训练（学语义相关性）
+nohup accelerate launch train_rec.py \
+  --dataset redial_gen \
+  --tokenizer microsoft/DialoGPT-small \
+  --model microsoft/DialoGPT-small \
+  --text_tokenizer roberta-base \
+  --text_encoder roberta-base \
+  --n_prefix_rec 10 \
+  --prompt_encoder /root/autodl-tmp/UniCRS-main/pre_trained_prompt/final \
+  --num_train_epochs 3 \
+  --per_device_train_batch_size 64 \
+  --per_device_eval_batch_size 64 \
+  --gradient_accumulation_steps 1 \
+  --num_warmup_steps 530 \
+  --context_max_length 200 \
+  --prompt_max_length 200 \
+  --entity_max_length 32 \
+  --learning_rate 1e-4 \
+  --output_dir /root/autodl-tmp/UniCRS-main/output_rec_aug_stage1 \
+  --use_fiup \
+  --fiup_alpha 0.8 \
+  --fiup_lambda 0.3 \
+  --fiup_implicit_alpha 0.2 \
+  --sentiment_backend textblob \
+  --fiup_states_dir /root/autodl-tmp/UniCRS-main/output_conv/fiup_states \
+  --use_kg_expand --kg_expand_max 32 \
+  --train_file /root/autodl-tmp/UniCRS-main/src/data/redial_gen/train_data_augmented.jsonl \
+  > train_rec_aug_stage1.log 2>&1 &
 ---
-
+### 第二阶段：用原始数据微调（整合协同过滤信息）
+等第一阶段跑完后执行，prompt_encoder 指向第一阶段的输出：
+nohup accelerate launch train_rec.py \
+  --dataset redial_gen \
+  --tokenizer microsoft/DialoGPT-small \
+  --model microsoft/DialoGPT-small \
+  --text_tokenizer roberta-base \
+  --text_encoder roberta-base \
+  --n_prefix_rec 10 \
+  --prompt_encoder /root/autodl-tmp/UniCRS-main/output_rec_aug_stage1/best \
+  --num_train_epochs 5 \
+  --per_device_train_batch_size 64 \
+  --per_device_eval_batch_size 64 \
+  --gradient_accumulation_steps 1 \
+  --num_warmup_steps 530 \
+  --context_max_length 200 \
+  --prompt_max_length 200 \
+  --entity_max_length 32 \
+  --learning_rate 5e-5 \
+  --output_dir /root/autodl-tmp/UniCRS-main/output_rec_aug_stage2 \
+  --use_fiup \
+  --fiup_alpha 0.8 \
+  --fiup_lambda 0.3 \
+  --fiup_implicit_alpha 0.2 \
+  --sentiment_backend textblob \
+  --fiup_states_dir /root/autodl-tmp/UniCRS-main/output_conv/fiup_states \
+  --use_kg_expand --kg_expand_max 32 \
+  > train_rec_aug_stage2.log 2>&1 &
 ### 对比实验命令（不启用 FIUP，验证效果差异）
 
 如果你需要跑一组**不带 FIUP 的基线**做对比，只需去掉三个参数即可：

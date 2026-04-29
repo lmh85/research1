@@ -7,8 +7,13 @@ __pycache__/
 *.zip
 *.tar
 *.gz
+*.pt
 models/
 pre_trained_prompt/
-
+output_conv/**/*
+src/log
+output_*/**
+trained_*/**
+fiup-nollm_*/**
 # 只排除 data 里的 ttl 文件
 data/**/*.ttl

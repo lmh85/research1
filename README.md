@@ -191,7 +191,7 @@ accelerate launch infer_conv.py \
 --context_max_length 200 \
 --resp_max_length 183 \
 --prompt_max_length 200 \
---entity_max_length 32 > infer_conv.log 2>&1 &
+--entity_max_length 32 > infer_conv423.log 2>&1 &
 ### Recommendation Task
 
 ```bash
