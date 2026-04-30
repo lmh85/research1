@@ -5,6 +5,8 @@ import os
 import sys
 import time
 
+os.environ["TRANSFORMERS_OFFLINE"] = "1"
+os.environ["HF_OFFLINE"] = "1"
 import numpy as np
 import torch
 import transformers

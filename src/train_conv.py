@@ -27,6 +27,8 @@ from modules.sentiment import SentimentAnalyzer
 from modules.fiup_manager import FIUPManager
 from dataset_rec import build_prompt_with_fiup
 
+os.environ["TRANSFORMERS_OFFLINE"] = "1"
+os.environ["HF_OFFLINE"] = "1"
 
 def parse_args():
     parser = argparse.ArgumentParser()

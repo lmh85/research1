@@ -2,7 +2,8 @@ import argparse
 import os
 import sys
 import time
-
+os.environ["TRANSFORMERS_OFFLINE"] = "1"
+os.environ["HF_OFFLINE"] = "1"
 import torch
 import transformers
 import wandb
